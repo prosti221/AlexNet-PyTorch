@@ -26,7 +26,7 @@ def cifar100_dataloader(root_dir, batch_size, num_workers, download=True):
 
     return train_loader, test_loader
 
-def imagenet_data_loader(data_path, batch_size, shuffle=True):
+def imagenet_dataloader(data_path, batch_size, shuffle=True):
     # Define transformations to be applied to the images
     data_transforms = transforms.Compose([
         transforms.Resize(227),
