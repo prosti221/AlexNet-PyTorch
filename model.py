@@ -7,8 +7,6 @@ Paper: https://proceedings.neurips.cc/paper/2012/file/c399862d3b9d6b76c8436e924a
 import torch
 import torch.nn as nn
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
 
 class FeatureExtractor(nn.Module):
     def __init__(self):
