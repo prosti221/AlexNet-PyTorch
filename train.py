@@ -14,12 +14,12 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=0.0005)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
 
-    train_loader, val_loader = get_dataloader('./data', 128, 8, download=True) # For CIFAR100
+    train_loader, val_loader = get_dataloader('./data', batch_size, 8, download=True) # For CIFAR100
 
     # For loading ImageNet data set use this
     '''
-    train_loader = imagenet_data_loader('data/imagenet-mini/train', batch_size=32)
-    val_loader = imagenet_data_loader('data/imagenet-mini/val', batch_size=32)
+    train_loader = imagenet_data_loader('data/imagenet-mini/train', batch_size=batch_size)
+    val_loader = imagenet_data_loader('data/imagenet-mini/val', batch_size=batch_size)
     '''
 
     for epoch in range(num_epoch):
