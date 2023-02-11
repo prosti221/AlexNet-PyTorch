@@ -18,11 +18,17 @@ class FeatureExtractor(nn.Module):
         self.c4 = nn.Conv2d(384, 384, kernel_size=(3, 3), stride=1, padding=1)
         
         self.c5 = nn.Conv2d(384, 256, kernel_size=(3, 3), stride=1, padding=1)
+
         # Initialize the weights of the Conv2d layers using a zero-mean Gaussian distribution
+        i = 1
         for m in self.modules():
           if isinstance(m, nn.Conv2d):
             nn.init.normal_(m.weight, mean=0, std=0.01)
-            nn.init.constant_(m.bias, 0)
+            if i < 2:
+                nn.init.constant_(m.bias, 0)
+            else:
+                nn.init.constant_(m.bias, 1)
+            i += 1
             
     def forward(self, x):
         x = self.c1(x)
