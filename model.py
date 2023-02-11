@@ -67,7 +67,7 @@ class FullyConnected(nn.Module):
         nn.init.normal_(self.fc2.weight, mean=0, std=0.01)
         nn.init.constant_(self.fc2.bias, 0)
         
-        self.fc3 = nn.Linear(in_features=4096, out_features=1000)
+        self.fc3 = nn.Linear(in_features=4096, out_features=num_classes)
         nn.init.normal_(self.fc3.weight, mean=0, std=0.01)
         nn.init.constant_(self.fc3.bias, 0)
         
@@ -79,9 +79,9 @@ class FullyConnected(nn.Module):
         return self.softmax(x)
     
 class AlexNet(nn.Module):
-    def __init__(self):
+    def __init__(self, num_classes=1000):
         super(AlexNet, self).__init__()
-        self.fe = FeatureExtractor()
+        self.fe = FeatureExtractor(num_classes=num_classes)
         self.fc = FullyConnected()
 
     def forward(self, x):
