@@ -81,8 +81,8 @@ class FullyConnected(nn.Module):
 class AlexNet(nn.Module):
     def __init__(self, num_classes=1000):
         super(AlexNet, self).__init__()
-        self.fe = FeatureExtractor(num_classes=num_classes)
-        self.fc = FullyConnected()
+        self.fe = FeatureExtractor()
+        self.fc = FullyConnected(num_classes=num_classes)
 
     def forward(self, x):
         x = self.fe(x)
