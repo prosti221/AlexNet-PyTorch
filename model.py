@@ -1,3 +1,9 @@
+'''
+Implementation of AlexNet as described in the paper. 
+The local response normalization layers were omitted due to reports of its impact being minimal.
+
+Paper: https://proceedings.neurips.cc/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf
+'''
 import torch
 import torch.nn as nn
 import numpy as np
