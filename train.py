@@ -1,34 +1,62 @@
 import torch
+import argparse
 from model import AlexNet
 from utils.data_loader import *
 from torch.utils.tensorboard import SummaryWriter
 from tensorboardX import SummaryWriter
 
+def get_args():
+    parser = argparse.ArgumentParser(description='Training script for a AlexNet')
+    parser.add_argument('-checkpoint', type=str, default='none', help='path to model checkpoint')
+    parser.add_argument('-dataset', '--dataset', default='./data/ILSVRC2012_img_val', help='path to training data')
+    parser.add_argument('--batch_size', type=int, default=128, help='batch size')
+    parser.add_argument('--num_workers', type=int, default=8, help='number of workers for data loading')
+    parser.add_argument('--learning_rate', type=float, default=0.0001, help='learning rate')
+    parser.add_argument('--epoch', type=int, default=90, help='number of epoch')
+    parser.add_argument('--classes', type=int, default=1000, help='number of classes')
+
+    return parser.parse_args()
+
 if __name__ == '__main__':
+    # Load all the arguments
+    args = get_args()
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    batch_size = 128 
-    lr = 0.0001
-    num_epoch = 90 
-    num_classes = 1000 
+    batch_size = args.batch_size
+    lr = args.learning_rate
+    num_epoch = args.epoch
+    num_classes = args.classes 
+    loss = 0.0
 
     model = AlexNet(num_classes)
-    model.to(device)
-
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
 
+    if args.checkpoint != 'none':
+        try:
+            model.load_state_dict(torch.load(args.checkpoint))
+            '''
+            checkpoint = torch.load(args.checkpoint)
+            model.load_state_dict(checkpoint['model_state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            num_epoch = checkpoint['epoch']
+            loss = checkpoint['loss']
+            '''
+        except FileNotFoundError:
+            print("Error: Checkpoint file not found")
+    model.to(device)
+
+
     # For CIFAR100
-    #train_loader, val_loader = cifar100_dataloader('./data', batch_size, 8, download=True) 
+    train_loader, val_loader = cifar100_dataloader(args.dataset, args.batch_size, args.num_workers, download=True) 
 
     # For ImageNet 
-    train_loader, val_loader = imageNet_dataloader2('./data/ILSVRC2012_img_train', batch_size, 12, download=True) 
+    #train_loader = imageNet_dataloader(args.dataset, args.batch_size, args.num_workers)
 
-    # For loading smaller ImageNet data set
-    '''
-    train_loader = imageNet_dataloader('data/imagenet-mini/train', batch_size=batch_size)
-    val_loader = imageNet_dataloader('data/imagenet-mini/val', batch_size=batch_size)
-    '''
+    # For loading ImageNet into a train/validation split
+    #train_loader = imageNet_dataloader_tv(args.dataset, args.batch_size, args.num_workers)
+
     writer = SummaryWriter()
     steps = 1
     for epoch in range(num_epoch):
@@ -61,7 +89,12 @@ if __name__ == '__main__':
 
             if steps % 1000 == 0:
                 checkpoint_path = "./checkpoints/checkpoint_epoch{}_step{}.pth".format(epoch+1, steps)
-                torch.save(model.state_dict(), checkpoint_path)
+                torch.save({
+                        'epoch': epoch,
+                        'model_state_dict': model.state_dict(),
+                        'optimizer_state_dict': optimizer.state_dict(),
+                        'loss': loss,
+                        }, checkpoint_path)
                 
             steps += 1
         lr_scheduler.step()
@@ -71,5 +104,10 @@ if __name__ == '__main__':
             writer.add_graph(model, inputs)
 
     writer.close()
-    torch.save(model.state_dict(), './models/model.pt')
+    torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss,
+            }, './models/model.pt')
     print('Finished Training')

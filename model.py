@@ -1,6 +1,7 @@
 '''
 Implementation of AlexNet as described in the paper. 
 The local response normalization layers were omitted due to reports of its impact being minimal.
+However after some testing, batch norm layers were added instead because the model would not train without it.
 
 Paper: https://proceedings.neurips.cc/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf
 '''
