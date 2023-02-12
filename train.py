@@ -5,23 +5,29 @@ from torch.utils.tensorboard import SummaryWriter
 from tensorboardX import SummaryWriter
 
 if __name__ == '__main__':
-    batch_size = 64
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    batch_size = 128 
     lr = 0.0001
-    num_epoch = 90
+    num_epoch = 90 
+    num_classes = 1000 
 
-    model = AlexNet()
-    #model.to(device)
+    model = AlexNet(num_classes)
+    model.to(device)
 
     loss_fn = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=0.0005)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
 
-    train_loader, val_loader = cifar100_dataloader('./data', batch_size, 8, download=True) # For CIFAR100
+    # For CIFAR100
+    #train_loader, val_loader = cifar100_dataloader('./data', batch_size, 8, download=True) 
 
-    # For loading ImageNet data set use this
+    # For ImageNet 
+    train_loader, val_loader = imageNet_dataloader2('./data/ILSVRC2012_img_train', batch_size, 12, download=True) 
+
+    # For loading smaller ImageNet data set
     '''
-    train_loader = imagenet_dataloader('data/imagenet-mini/train', batch_size=batch_size)
-    val_loader = imagenet_dataloader('data/imagenet-mini/val', batch_size=batch_size)
+    train_loader = imageNet_dataloader('data/imagenet-mini/train', batch_size=batch_size)
+    val_loader = imageNet_dataloader('data/imagenet-mini/val', batch_size=batch_size)
     '''
     writer = SummaryWriter()
     steps = 1
@@ -32,7 +38,7 @@ if __name__ == '__main__':
 
         for i, data in enumerate(train_loader, 0):
             inputs, labels = data
-            #inputs, labels = inputs.to(device), labels.to(device)
+            inputs, labels = inputs.to(device), labels.to(device)
             
             optimizer.zero_grad()
             outputs = model(inputs)
@@ -65,5 +71,5 @@ if __name__ == '__main__':
             writer.add_graph(model, inputs)
 
     writer.close()
-
+    torch.save(model.state_dict(), './models/model.pt')
     print('Finished Training')

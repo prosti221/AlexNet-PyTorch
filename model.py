@@ -16,10 +16,13 @@ class FeatureExtractor(nn.Module):
         self.relu = nn.ReLU()
         
         self.c1 = nn.Conv2d(3, 96, kernel_size=(11, 11), stride=4)
+        self.b1 = nn.BatchNorm2d(96)
         self.c2 = nn.Conv2d(96, 256, kernel_size=(5, 5), stride=1, padding=2)
+        self.b2_5 = nn.BatchNorm2d(256)
 
         self.c3 = nn.Conv2d(256, 384, kernel_size=(3, 3), stride=1, padding=1) 
         self.c4 = nn.Conv2d(384, 384, kernel_size=(3, 3), stride=1, padding=1)
+        self.b3_4 = nn.BatchNorm2d(384)
         
         self.c5 = nn.Conv2d(384, 256, kernel_size=(3, 3), stride=1, padding=1)
 
@@ -36,14 +39,19 @@ class FeatureExtractor(nn.Module):
             
     def forward(self, x):
         x = self.c1(x)
+        x = self.b1(x)
         x = self.max(self.relu(x))
 
         x = self.c2(x)
+        x = self.b2_5(x)
         x = self.max(self.relu(x))
 
         x = self.c3(x)
+        x = self.b3_4(x)
         x = self.c4(self.relu(x))
+        x = self.b3_4(x)
         x = self.c5(self.relu(x))
+        x = self.b2_5(x)
         
         x = self.max(self.relu(x))
         x = self.dropout(x)
@@ -56,6 +64,7 @@ class FullyConnected(nn.Module):
         self.dropout = nn.Dropout(p=0.5)
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax(dim=0)
+        self.b = nn.BatchNorm1d(4096)
         
         self.fc1 = nn.Linear(in_features=9216, out_features=4096)
         nn.init.normal_(self.fc1.weight, mean=0, std=0.01)
@@ -71,8 +80,10 @@ class FullyConnected(nn.Module):
         
     def forward(self, x):
         x = self.fc1(x)
+        x = self.b(x)
         x = self.dropout(x)
         x = self.fc2(self.relu(x))
+        x = self.b(x)
         x = self.fc3(self.relu(x))
         return self.softmax(x)
     
