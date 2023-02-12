@@ -18,31 +18,29 @@ def get_args():
     return parser.parse_args()
 
 if __name__ == '__main__':
-    # Load all the arguments
     args = get_args()
-
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     batch_size = args.batch_size
     lr = args.learning_rate
     num_epoch = args.epoch
     num_classes = args.classes 
     loss = 0.0
+    epoch = 0
 
     model = AlexNet(num_classes)
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
 
+    # Load from checkpoint
     if args.checkpoint != 'none':
         try:
-            model.load_state_dict(torch.load(args.checkpoint))
-            '''
             checkpoint = torch.load(args.checkpoint)
             model.load_state_dict(checkpoint['model_state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            num_epoch = checkpoint['epoch']
+            epoch = checkpoint['epoch']
             loss = checkpoint['loss']
-            '''
         except FileNotFoundError:
             print("Error: Checkpoint file not found")
     model.to(device)
@@ -105,7 +103,7 @@ if __name__ == '__main__':
 
     writer.close()
     torch.save({
-            'epoch': epoch,
+            'epoch': num_epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'loss': loss,
