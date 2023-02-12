@@ -42,7 +42,7 @@ if __name__ == '__main__':
             model.load_state_dict(checkpoint['model_state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             epoch = checkpoint['epoch']
-            steps = checkpoint['steps']
+            #steps = checkpoint['steps']
             loss = checkpoint['loss']
         except FileNotFoundError:
             print("Error: Checkpoint file not found")
@@ -50,10 +50,10 @@ if __name__ == '__main__':
 
 
     # For CIFAR100
-    train_loader, val_loader = cifar100_dataloader(args.dataset, args.batch_size, args.num_workers, download=True) 
+    #train_loader, val_loader = cifar100_dataloader(args.dataset, args.batch_size, args.num_workers, download=True) 
 
     # For ImageNet 
-    #train_loader = imageNet_dataloader(args.dataset, args.batch_size, args.num_workers)
+    train_loader = imageNet_dataloader(args.dataset, args.batch_size, args.num_workers)
 
     # For loading ImageNet into a train/validation split
     #train_loader = imageNet_dataloader_tv(args.dataset, args.batch_size, args.num_workers)

@@ -1,5 +1,6 @@
 import torch
 import argparse
+from tqdm import tqdm
 from model import AlexNet
 from utils.data_loader import *
 from torch.utils.tensorboard import SummaryWriter
@@ -17,23 +18,24 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     
     # ImageNet
-    #val_loader = imageNet_dataloader(args.dataset, args.batch_size, args.num_workers)
+    val_loader = imageNet_dataloader(args.dataset, args.batch_size, args.num_workers)
 
     #CIFAR-10
-    _, val_loader = cifar100_dataloader(args.dataset, args.batch_size, args.num_workers, download=True)
+    #_, val_loader = cifar100_dataloader(args.dataset, args.batch_size, args.num_workers, download=True)
 
     loss_fn = torch.nn.CrossEntropyLoss()
     model = AlexNet(args.classes)
 
     # Load model
-    if args.checkpoint != 'none':
-        try:
-            checkpoint = torch.load(args.checkpoint)
-            model.load_state_dict(checkpoint['model_state_dict'])
-        except FileNotFoundError:
-            print("Error: Checkpoint file not found")
+    try:
+        checkpoint = torch.load(args.model)
+        model.load_state_dict(checkpoint['model_state_dict'])
+    except FileNotFoundError:
+        print("Error: Checkpoint file not found")
 
     model.to(device)
     model.eval()  
@@ -42,7 +44,7 @@ if __name__ == '__main__':
     val_correct = 0
     val_total = 0
 
-    for inputs, labels in val_loader:
+    for inputs, labels in tqdm(val_loader, desc='Validation Progress'):
         inputs = inputs.to(device)
         labels = labels.to(device)
 
