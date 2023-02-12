@@ -25,8 +25,10 @@ if __name__ == '__main__':
     lr = args.learning_rate
     num_epoch = args.epoch
     num_classes = args.classes 
+
     loss = 0.0
     epoch = 0
+    steps = 1
 
     model = AlexNet(num_classes)
     loss_fn = torch.nn.CrossEntropyLoss()
@@ -40,6 +42,7 @@ if __name__ == '__main__':
             model.load_state_dict(checkpoint['model_state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             epoch = checkpoint['epoch']
+            steps = checkpoint['steps']
             loss = checkpoint['loss']
         except FileNotFoundError:
             print("Error: Checkpoint file not found")
@@ -56,7 +59,6 @@ if __name__ == '__main__':
     #train_loader = imageNet_dataloader_tv(args.dataset, args.batch_size, args.num_workers)
 
     writer = SummaryWriter()
-    steps = 1
     for epoch in range(num_epoch):
         running_loss = 0.0
         last_lost = 0.0
@@ -92,6 +94,7 @@ if __name__ == '__main__':
                         'model_state_dict': model.state_dict(),
                         'optimizer_state_dict': optimizer.state_dict(),
                         'loss': loss,
+                        'steps': steps,
                         }, checkpoint_path)
                 
             steps += 1
@@ -107,5 +110,6 @@ if __name__ == '__main__':
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'loss': loss,
+            'steps': steps,
             }, './models/model.pt')
     print('Finished Training')

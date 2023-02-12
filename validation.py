@@ -11,16 +11,12 @@ def get_args():
     parser.add_argument('-dataset', '--dataset', default='./data/ILSVRC2012_img_val', help='path to validation data')
     parser.add_argument('--batch_size', type=int, default=128, help='batch size')
     parser.add_argument('--num_workers', type=int, default=8, help='number of workers for data loading')
+    parser.add_argument('--classes', type=int, default=1000, help='number of classes in the model')
 
     return parser.parse_args()
 
-def validate(PATH):
-    return val_loss, val_acc
-
-
 if __name__ == '__main__':
     args = get_args()
-
     
     # ImageNet
     #val_loader = imageNet_dataloader(args.dataset, args.batch_size, args.num_workers)
@@ -29,8 +25,17 @@ if __name__ == '__main__':
     _, val_loader = cifar100_dataloader(args.dataset, args.batch_size, args.num_workers, download=True)
 
     loss_fn = torch.nn.CrossEntropyLoss()
+    model = AlexNet(args.classes)
 
-    torch.load(args.model)
+    # Load model
+    if args.checkpoint != 'none':
+        try:
+            checkpoint = torch.load(args.checkpoint)
+            model.load_state_dict(checkpoint['model_state_dict'])
+        except FileNotFoundError:
+            print("Error: Checkpoint file not found")
+
+    model.to(device)
     model.eval()  
 
     val_loss = 0.0
