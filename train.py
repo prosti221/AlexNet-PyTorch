@@ -50,10 +50,10 @@ if __name__ == '__main__':
 
 
     # For CIFAR100
-    #train_loader, val_loader = cifar100_dataloader(args.dataset, args.batch_size, args.num_workers, download=True) 
+    train_loader, val_loader = cifar100_dataloader(args.dataset, args.batch_size, args.num_workers, download=True) 
 
     # For ImageNet 
-    train_loader = imageNet_dataloader(args.dataset, args.batch_size, args.num_workers)
+    #train_loader = imageNet_dataloader(args.dataset, args.batch_size, args.num_workers)
 
     # For loading ImageNet into a train/validation split
     #train_loader = imageNet_dataloader_tv(args.dataset, args.batch_size, args.num_workers)
@@ -61,9 +61,11 @@ if __name__ == '__main__':
     writer = SummaryWriter()
     for epoch in range(num_epoch):
         running_loss = 0.0
-        last_lost = 0.0
+        running_corrects = 0
+        total_examples = 0
         model.train(True)
-
+        
+        train_correct = 0
         for i, data in enumerate(train_loader, 0):
             inputs, labels = data
             inputs, labels = inputs.to(device), labels.to(device)
@@ -74,8 +76,15 @@ if __name__ == '__main__':
 
             loss.backward()
             optimizer.step()
+            
+            running_loss += loss.item() * inputs.size(0)
 
             writer.add_scalar('Training Loss', loss.item(), steps)
+            
+            
+            _, preds = torch.max(outputs, 1)
+            running_corrects += torch.sum(preds == labels.data)
+            total_examples += labels.size(0)
 
             if steps % 100 == 0:
                 with torch.no_grad():
@@ -100,7 +109,49 @@ if __name__ == '__main__':
             steps += 1
         lr_scheduler.step()
         writer.add_scalar('Learning Rate', optimizer.param_groups[0]['lr'], epoch)
+        
+        epoch_loss = running_loss / len(train_loader.dataset)
+        epoch_acc = running_corrects.double() / len(train_loader.dataset)
+        
+        if (epoch + 1) % 10 == 0:
+            writer.add_graph(model, inputs)
+        
+        # Validation loop
+        model.eval()
+        val_loss = 0.0
+        val_correct = 0
+        val_total = 0
 
+        for inputs, labels in val_loader:
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+
+            with torch.no_grad():
+                outputs = model(inputs)
+                loss = loss_fn(outputs, labels)
+                val_loss += loss.item() * inputs.size(0)
+
+                _, predictions = torch.max(outputs, 1)
+                val_correct += (predictions == labels).sum().item()
+                val_total += inputs.size(0)
+
+        val_loss = val_loss / val_total
+        val_acc = (val_correct / val_total) * 100
+
+        writer.add_scalar('Validation Loss', val_loss, epoch)
+        writer.add_scalar('Validation Accuracy', val_acc, epoch)
+        
+        writer.add_scalar('Training Running Loss', epoch_loss, epoch)
+        writer.add_scalar('Training Accuracy', epoch_acc, epoch)
+
+        print('\nEpoch: {} \tStep: {} \tTrain Loss: {:.4f} \tVal Loss: {:.4f} \tVal Acc: {:.4f}'
+                .format(epoch + 1, steps, loss.item(), val_loss, val_acc))
+        
+        print('Epoch [{}/{}], Running loss: {:.4f}, Avg acc: {:.2f}\n'
+          .format(epoch+1, num_epoch, epoch_loss, epoch_acc*100))
+        
+        writer.add_scalars('Accuracy', {'training': epoch_acc,
+                                        'validation': val_acc}, epoch)
         if (epoch + 1) % 10 == 0:
             writer.add_graph(model, inputs)
 
