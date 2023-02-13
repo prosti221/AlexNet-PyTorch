@@ -86,7 +86,7 @@ class FullyConnected(nn.Module):
         x = self.fc2(self.relu(x))
         x = self.b(x)
         x = self.fc3(self.relu(x))
-        return self.softmax(x)
+        return x
     
 class AlexNet(nn.Module):
     def __init__(self, num_classes=1000):
