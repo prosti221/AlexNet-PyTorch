@@ -4,7 +4,6 @@ from tqdm import tqdm
 from model import AlexNet
 from utils.data_loader import *
 from torch.utils.tensorboard import SummaryWriter
-from tensorboardX import SummaryWriter
 
 def get_args():
     parser = argparse.ArgumentParser(description='Validation script for a AlexNet')
@@ -22,10 +21,10 @@ if __name__ == '__main__':
 
     
     # ImageNet
-    val_loader = imageNet_dataloader(args.dataset, args.batch_size, args.num_workers)
+    #val_loader = imageNet_dataloader(args.dataset, args.batch_size, args.num_workers)
 
     #CIFAR-10
-    #_, val_loader = cifar100_dataloader(args.dataset, args.batch_size, args.num_workers, download=True)
+    _, val_loader = cifar100_dataloader(args.dataset, args.batch_size, args.num_workers, download=True)
 
     loss_fn = torch.nn.CrossEntropyLoss()
     model = AlexNet(args.classes)

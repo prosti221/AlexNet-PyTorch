@@ -3,7 +3,6 @@ import argparse
 from model import AlexNet
 from utils.data_loader import *
 from torch.utils.tensorboard import SummaryWriter
-from tensorboardX import SummaryWriter
 
 def get_args():
     parser = argparse.ArgumentParser(description='Training script for a AlexNet')
@@ -27,10 +26,10 @@ if __name__ == '__main__':
     num_classes = args.classes 
 
     loss = 0.0
-    epoch = 0
+    epoch_checkpoint = 0
     steps = 1
 
-    model = AlexNet(num_classes)
+    model = AlexNet(num_classes).to(device)
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
@@ -41,7 +40,7 @@ if __name__ == '__main__':
             checkpoint = torch.load(args.checkpoint)
             model.load_state_dict(checkpoint['model_state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            epoch = checkpoint['epoch']
+            epoch_checkpoint = checkpoint['epoch']
             #steps = checkpoint['steps']
             loss = checkpoint['loss']
         except FileNotFoundError:
@@ -59,7 +58,7 @@ if __name__ == '__main__':
     #train_loader = imageNet_dataloader_tv(args.dataset, args.batch_size, args.num_workers)
 
     writer = SummaryWriter()
-    for epoch in range(num_epoch):
+    for epoch in range(epoch_checkpoint, num_epoch):
         running_loss = 0.0
         running_corrects = 0
         total_examples = 0
@@ -107,11 +106,11 @@ if __name__ == '__main__':
                         }, checkpoint_path)
                 
             steps += 1
-        lr_scheduler.step()
+        #lr_scheduler.step()
         writer.add_scalar('Learning Rate', optimizer.param_groups[0]['lr'], epoch)
         
         epoch_loss = running_loss / len(train_loader.dataset)
-        epoch_acc = running_corrects.double() / len(train_loader.dataset)
+        epoch_acc = (running_corrects.double() / len(train_loader.dataset)) * 100.0
         
         if (epoch + 1) % 10 == 0:
             writer.add_graph(model, inputs)
@@ -148,7 +147,7 @@ if __name__ == '__main__':
                 .format(epoch + 1, steps, loss.item(), val_loss, val_acc))
         
         print('Epoch [{}/{}], Running loss: {:.4f}, Avg acc: {:.2f}\n'
-          .format(epoch+1, num_epoch, epoch_loss, epoch_acc*100))
+          .format(epoch+1, num_epoch, epoch_loss, epoch_acc))
         
         writer.add_scalars('Accuracy', {'training': epoch_acc,
                                         'validation': val_acc}, epoch)
